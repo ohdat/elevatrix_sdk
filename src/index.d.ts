@@ -32,6 +32,7 @@ declare interface Elevatrix {
   checkNetwork: (chainId?: number) => boolean;
   addNetwork: (config?: NetworkConfig) => Promise<void>;
   switchNetwork: (config?: NetworkConfig) => Promise<void>;
+  getMintInfo: (params: MintParams, apiBaseUrl?: string) => Promise<any>;
   mint: (params: MintParams) => Promise<void>;
 }
 

@@ -123,11 +123,21 @@ const Elevatrix = function () {
     }
   }
 
-  const getMintInfo = async (params: MintParams) => {
+  const getMintInfo = async (params: MintParams, apiBaseUrl?: string) => {
     const { projectId, quantity, wallet, mintType } = params
-    const url = `https://creator.dev.catgpt.chat/v1/mint?quantity=${quantity}&project_id=${projectId}&wallet=${wallet}&mint_type=${mintType}`
+    const backupUrl = 'https://creator.elevatrix.xyz/'
+    const url = (apiBaseUrl || backupUrl) + `/v1/mint?quantity=${quantity}&project_id=${projectId}&wallet=${wallet}&mint_type=${mintType}`
     const res = await fetch(url)
     return res.json()
+  }
+
+  
+  type MintParams = {
+    projectId: string;
+    quantity: number;
+    wallet?: string;
+    mintType?: 1 | 2;
+    istest?: boolean;
   }
 
   /**
@@ -137,17 +147,11 @@ const Elevatrix = function () {
    * @param wallet [string] wallet address
    * @param mintType [1 | 2] mint type 1: common mint 2: wallet mint[pro]
    */
-  type MintParams = {
-    projectId: string;
-    quantity: number;
-    wallet?: string;
-    mintType?: 1 | 2;
-  }
-  const mint = async (params: MintParams) => {
+  const mint = async (params: MintParams, apiBaseUrl?: string) => {
     if (!provider) {
       throw new Error(errorMsg[0])
     }
-    const res = await getMintInfo(params)
+    const res = await getMintInfo(params, apiBaseUrl)
     if (res.code != 200) {
       throw new Error(res.msg)
     }
@@ -188,6 +192,7 @@ const Elevatrix = function () {
     checkNetwork,
     addNetwork,
     switchNetwork,
+    getMintInfo,
     mint,
   }
 }
