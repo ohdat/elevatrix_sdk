@@ -1,5 +1,5 @@
 {
-  "name": "elevatrix_sdk",
+  "name": "elevatrix",
   "version": "0.0.2",
   "description": "a elevatrix sdk",
   "main": "dist/index.cjs.js",
@@ -13,6 +13,10 @@
   },
   "author": "luoxi",
   "license": "ISC",
+  "files": [
+    "dist",
+    "src"
+  ],
   "devDependencies": {
     "@rollup/plugin-commonjs": "^18.0.0",
     "@rollup/plugin-json": "^6.1.0",
