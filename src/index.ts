@@ -224,6 +224,7 @@ const Elevatrix = function (type = 'default', oldProvider?: any) {
   }
 
   return {
+    modal,
     provider,
     connectWallet,
     checkNetwork,

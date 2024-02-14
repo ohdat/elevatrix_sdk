@@ -26,9 +26,8 @@ declare type MintParams = {
 
 declare interface Elevatrix {
   modal: any;
-  setProvider: (p: any) => void;
+  provider: any;
   connectWallet: () => Promise<void>;
-  disConnectWallet: () => Promise<void>;
   checkNetwork: (chainId?: number) => boolean;
   addNetwork: (config?: NetworkConfig) => Promise<void>;
   switchNetwork: (config?: NetworkConfig) => Promise<void>;
