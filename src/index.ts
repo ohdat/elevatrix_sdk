@@ -125,8 +125,8 @@ const Elevatrix = function () {
 
   const getMintInfo = async (params: MintParams, apiBaseUrl?: string) => {
     const { projectId, quantity, wallet, mintType } = params
-    const backupUrl = 'https://creator.elevatrix.xyz/'
-    const url = (apiBaseUrl || backupUrl) + `/v1/mint?quantity=${quantity}&project_id=${projectId}&wallet=${wallet}&mint_type=${mintType}`
+    const backupUrl = 'https://creator.elevatrix.xyz'
+    const url = (apiBaseUrl || backupUrl) + `/v1/mint?quantity=${quantity || ''}&project_id=${projectId || ''}&wallet=${wallet || ''}&mint_type=${mintType || ''}`
     const res = await fetch(url)
     return res.json()
   }
