@@ -33,7 +33,7 @@ declare interface Elevatrix {
   addNetwork: (config?: NetworkConfig) => Promise<void>;
   switchNetwork: (config?: NetworkConfig) => Promise<void>;
   getMintInfo: (params: MintParams, apiBaseUrl?: string) => Promise<any>;
-  mint: (params: MintParams) => Promise<void>;
+  mint: (params: MintParams, apiBaseUrl?: string) => Promise<void>;
 }
 
 declare namespace defaultExport {
