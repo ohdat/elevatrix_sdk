@@ -3,7 +3,7 @@ import resolve from 'rollup-plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import pkg from './package.json';
-// import livereload from 'rollup-plugin-livereload';
+import livereload from 'rollup-plugin-livereload';
 
 const footer = `
 if(typeof window !== 'undefined') {
@@ -35,7 +35,7 @@ export default {
     typescript(),
     commonjs(),
     json(),
-    // livereload('src'),
+    livereload('src'),
   ],
   external: ['ethers', '@web3modal/ethers'],
   context: 'window',

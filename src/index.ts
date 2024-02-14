@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import ContractABI from "./abi/contract.json";
+import { createWeb3Modal, defaultConfig } from "@web3modal/ethers";
 
 type Metadata = {
   name: string;
@@ -26,38 +27,73 @@ const blastSepolia = {
   rpcUrl: 'https://sepolia.blast.io'
 }
 
+const metadata = {
+  name: 'ELEVATRIX',
+  description: 'ELEVATRIX, the cutting-edge zero coding platform for NFT generation and deployment. We pave the way for creators to enter the NFT space with low costs and low threshold.',
+  url: 'https://elevatrix.vercel.app/',
+  icons: []
+}
+
 const errorMsg = [
   'Please install MetaMask first or set other provider to Elevatrix.',
 ]
 
-const Elevatrix = function () {
-  /** 
-   * @des the modal is about webmodal
-   */
-  let provider: any = web3?.currentProvider
+const Elevatrix = function (type = 'default', oldProvider?: any) {
+  let modal: any = null
+  let provider: any = type === 'default' ? null : oldProvider
 
-  /** 
-   * @des set the provider to Elevatrix, you can get provider from web3/ethers or other wallet
-   */
-  const setProvider = (p: any) => {
-    provider = p
+  const initDefault = () => {
+    if (type === 'default') {
+      modal = createWeb3Modal({
+        ethersConfig: defaultConfig({ metadata }),
+        chains: [mainnet, blastSepolia],
+        projectId: "e84dcbc0387226f505ea48159e32c174",
+      })
+    }
   }
+
+  initDefault()
 
   /**
    * @des if your are newer in web3, you can connect wallet here.
    */
-  const connectWallet = async () => {
-    if (!provider) {
-      throw new Error(errorMsg[0])
-    }
-    if (provider.selectedAddress) {
-      return true
-    }
-    try {
-      await provider.enable()
-    } catch (e) {
-      throw e
-    }
+  const connectWallet = () => {
+    return new Promise<void>((resolve, reject) => {
+      if (type === 'default') {
+        if (!modal.getAddress()) {
+          const unsubscribe = modal.subscribeState(newState => {
+            if (modal.getAddress()) {
+              const timer = setTimeout(() => {
+                provider = modal.getWalletProvider()
+                resolve()
+                unsubscribe()
+                clearTimeout(timer)
+              }, 100)
+            } else if (newState.open === false) {
+              reject()
+              unsubscribe()
+            }
+          })
+          modal.open()
+          return
+        }
+        provider = modal.getWalletProvider()
+        resolve()
+      } else {
+        if (!provider) {
+          reject(new Error(errorMsg[0]))
+        }
+        if (provider.selectedAddress) {
+          resolve()
+        }
+        provider.enable()
+          .then(() => {
+            resolve()
+          }).catch((error: any) => {
+            reject(error)
+          })
+      }
+    })
   }
 
   /**
@@ -86,7 +122,7 @@ const Elevatrix = function () {
     }
     const { chainId, name, currency, explorerUrl, rpcUrl } = { ...blastSepolia, ...config }
     const params = {
-      chainId:"0x" + chainId.toString(16),
+      chainId: "0x" + chainId.toString(16),
       chainName: name,
       nativeCurrency: {
         name: currency,
@@ -131,7 +167,7 @@ const Elevatrix = function () {
     return res.json()
   }
 
-  
+
   type MintParams = {
     projectId: string;
     quantity: number;
@@ -148,10 +184,11 @@ const Elevatrix = function () {
    * @param mintType [1 | 2] mint type 1: common mint 2: wallet mint[pro]
    */
   const mint = async (params: MintParams, apiBaseUrl?: string) => {
-    if (!provider) {
-      throw new Error(errorMsg[0])
-    }
-    const res = await getMintInfo(params, apiBaseUrl)
+    await connectWallet()
+    const res = await getMintInfo({
+      ...params,
+      wallet: type === 'default' ? modal.getAddress() : provider.selectedAddress,
+    }, apiBaseUrl)
     if (res.code != 200) {
       throw new Error(res.msg)
     }
@@ -159,6 +196,7 @@ const Elevatrix = function () {
     if (!isRightNetwork) {
       await switchNetwork()
     }
+    console.log(res.data)
     const amount = ethers.parseEther((Number(res.data.price) * res.data.quantity).toString())
     const ethersProvider = new ethers.BrowserProvider(provider)
     const signer = await ethersProvider.getSigner()
@@ -187,7 +225,6 @@ const Elevatrix = function () {
 
   return {
     provider,
-    setProvider,
     connectWallet,
     checkNetwork,
     addNetwork,

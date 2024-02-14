@@ -39,7 +39,7 @@ declare interface Elevatrix {
 declare namespace defaultExport {
   const mainnet: Metadata;
   const blastnet: Metadata;
-  const Elevatrix: new () => Elevatrix;
+  const Elevatrix: new (type?: 'default' | 'custom', provider?: any) => Elevatrix;
 }
 
 export = defaultExport
