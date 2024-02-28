@@ -194,9 +194,8 @@ const Elevatrix = function (type = 'default', oldProvider?: any) {
     }
     const isRightNetwork = checkNetwork(res.data.chain_id)
     if (!isRightNetwork) {
-      await switchNetwork()
+      await switchNetwork(res.data.chain_id)
     }
-    console.log(res.data)
     const amount = ethers.parseEther((Number(res.data.price) * res.data.quantity).toString())
     const ethersProvider = new ethers.BrowserProvider(provider)
     const signer = await ethersProvider.getSigner()
@@ -214,7 +213,7 @@ const Elevatrix = function (type = 'default', oldProvider?: any) {
     }
     const mintInfo = await contract.mint(
       contractParams,
-      res.data.quantity,
+      res.data.quantity.toString(),
       {
         value: amount,
       }
