@@ -249,7 +249,6 @@ const Elevatrix = function (type = 'default', oldProvider?: any) {
         value: amount,
       }
     )
-    await mintInfo.wait()
     return mintInfo
   }
 
