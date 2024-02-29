@@ -41,12 +41,36 @@ const errorMsg = [
 const Elevatrix = function (type = 'default', oldProvider?: any) {
   let modal: any = null
   let provider: any = type === 'default' ? null : oldProvider
+  let networks = [
+    {
+      chainId: 1,
+      name: 'Ethereum',
+      currency: 'ETH',
+      explorerUrl: 'https://etherscan.io',
+      rpcUrl: 'https://cloudflare-eth.com'
+    },
+    {
+      chainId: 168587773,
+      name: 'Blast Sepolia',
+      currency: 'ETH',
+      explorerUrl: 'https://testnet.blastscan.io/',
+      rpcUrl: 'https://sepolia.blast.io'
+    }
+  ]
+  
+  async function getNetworks() {
+    const res = await fetch(process.env.NEXT_PUBLIC_API + '/v2/chains/networks')
+    const resJson = await res.json()
+    networks = resJson.data
+    return networks
+  }
 
-  const initDefault = () => {
+  const initDefault = async () => {
+    await getNetworks()
     if (type === 'default') {
       modal = createWeb3Modal({
         ethersConfig: defaultConfig({ metadata }),
-        chains: [mainnet, blastSepolia],
+        chains: networks,
         projectId: "e84dcbc0387226f505ea48159e32c174",
       })
     }
@@ -145,17 +169,23 @@ const Elevatrix = function (type = 'default', oldProvider?: any) {
    * @param config [NetworkConfig] network config like chainId, name, currency, explorerUrl, rpcUrl
    */
   const switchNetwork = async (config: any = {}) => {
-    if (!provider) {
-      throw new Error(errorMsg[0])
-    }
-    try {
-      await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x' + (config.chainId || blastSepolia.chainId).toString(16) }] })
-    } catch (error: any) {
-      if (error?.code == 4902) {
-        await addNetwork(config)
-        return
+    const chainId = '0x' + (config.chainId || blastSepolia.chainId).toString(16)
+    if (type === 'default') {
+      await modal.switchNetwork(config.chainId || blastSepolia.chainId)
+      throw new Error('Please switch network first.')
+    } else {
+      if (!provider) {
+        throw new Error(errorMsg[0])
       }
-      throw error
+      try {
+        await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] })
+      } catch (error: any) {
+        if (error?.code == 4902) {
+          await addNetwork(config)
+          return
+        }
+        throw error
+      }
     }
   }
 
@@ -190,11 +220,12 @@ const Elevatrix = function (type = 'default', oldProvider?: any) {
       wallet: type === 'default' ? modal.getAddress() : provider.selectedAddress,
     }, apiBaseUrl)
     if (res.code != 200) {
-      throw new Error(res.msg)
+      throw new Error(res.message || res.msg)
     }
     const isRightNetwork = checkNetwork(res.data.chain_id)
     if (!isRightNetwork) {
-      await switchNetwork(res.data.chain_id)
+      const rightNetworkConfig = networks.find((item) => item.chainId == res.data.chain_id)
+      await switchNetwork(rightNetworkConfig)
     }
     const amount = ethers.parseEther((Number(res.data.price) * res.data.quantity).toString())
     const ethersProvider = new ethers.BrowserProvider(provider)
@@ -236,6 +267,4 @@ const Elevatrix = function (type = 'default', oldProvider?: any) {
 
 module.exports = {
   Elevatrix,
-  mainnet,
-  blastSepolia,
 }
