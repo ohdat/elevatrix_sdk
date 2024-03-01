@@ -36,6 +36,7 @@ const metadata = {
 
 const errorMsg = [
   'Please install MetaMask first or set other provider to Elevatrix.',
+  'User rejected the request.',
 ]
 
 const Elevatrix = function (type = 'default', oldProvider?: any) {
@@ -85,17 +86,23 @@ const Elevatrix = function (type = 'default', oldProvider?: any) {
     return new Promise<void>((resolve, reject) => {
       if (type === 'default') {
         if (!modal.getAddress()) {
-          const unsubscribe = modal.subscribeState(newState => {
-            if (modal.getAddress()) {
-              const timer = setTimeout(() => {
-                provider = modal.getWalletProvider()
-                resolve()
-                unsubscribe()
-                clearTimeout(timer)
-              }, 100)
-            } else if (newState.open === false) {
-              reject()
+          const unsubscribe = modal.subscribeEvents(event => {
+            const data = event.data
+            console.log(data)
+            if (data.event === "MODAL_CLOSE") {
               unsubscribe()
+              reject(new Error(errorMsg[1]))
+            }
+            if (data.event === 'CONNECT_SUCCESS') {
+              setTimeout(() => {
+                if (modal.getAddress()) {
+                  unsubscribe()
+                  resolve()
+                  return
+                }
+                unsubscribe()
+                reject(new Error(errorMsg[1])) 
+              }, 100)
             }
           })
           modal.open()
@@ -172,7 +179,6 @@ const Elevatrix = function (type = 'default', oldProvider?: any) {
     const chainId = '0x' + (config.chainId || blastSepolia.chainId).toString(16)
     if (type === 'default') {
       await modal.switchNetwork(config.chainId || blastSepolia.chainId)
-      throw new Error('Please switch network first.')
     } else {
       if (!provider) {
         throw new Error(errorMsg[0])
@@ -214,6 +220,7 @@ const Elevatrix = function (type = 'default', oldProvider?: any) {
    * @param mintType [1 | 2] mint type 1: common mint 2: wallet mint[pro]
    */
   const mint = async (params: MintParams, apiBaseUrl?: string) => {
+    console.log(789)
     await connectWallet()
     const res = await getMintInfo({
       ...params,
