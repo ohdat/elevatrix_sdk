@@ -88,7 +88,6 @@ const Elevatrix = function (type = 'default', oldProvider?: any) {
         if (!modal.getAddress()) {
           const unsubscribe = modal.subscribeEvents(event => {
             const data = event.data
-            console.log(data)
             if (data.event === "MODAL_CLOSE") {
               unsubscribe()
               reject(new Error(errorMsg[1]))
@@ -220,7 +219,6 @@ const Elevatrix = function (type = 'default', oldProvider?: any) {
    * @param mintType [1 | 2] mint type 1: common mint 2: wallet mint[pro]
    */
   const mint = async (params: MintParams, apiBaseUrl?: string) => {
-    console.log(789)
     await connectWallet()
     const res = await getMintInfo({
       ...params,
