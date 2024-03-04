@@ -269,6 +269,4 @@ const Elevatrix = function (type = 'default', oldProvider?: any) {
   }
 }
 
-module.exports = {
-  Elevatrix,
-}
+export default Elevatrix
