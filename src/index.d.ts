@@ -25,19 +25,17 @@ declare type MintParams = {
 }
 
 declare interface Elevatrix {
+  /** web3modal inited, you can use it to get methods about web3modal */
   modal: any;
+  /** provider inited, you can use it to get methods about provider */
   provider: any;
-  connectWallet: () => Promise<void>;
-  checkNetwork: (chainId?: number) => boolean;
-  addNetwork: (config?: NetworkConfig) => Promise<void>;
-  switchNetwork: (config?: NetworkConfig) => Promise<void>;
-  getMintInfo: (params: MintParams, apiBaseUrl?: string) => Promise<any>;
+  /** blockchain networks config arr */
+  networks: NetworkConfig[];
+  /** mint nft */
   mint: (params: MintParams, apiBaseUrl?: string) => Promise<void>;
 }
 
 declare namespace defaultExport {
-  const mainnet: Metadata;
-  const blastnet: Metadata;
   const Elevatrix: new (type?: 'default' | 'custom', provider?: any) => Elevatrix;
 }
 

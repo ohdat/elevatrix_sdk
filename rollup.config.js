@@ -14,19 +14,8 @@ export default {
   input: './src/index.ts',
   output: [
     {
-      file: pkg.main,
-      format: 'cjs',
-      footer,
-    },
-    {
       file: pkg.module,
       format: 'esm',
-      footer,
-    },
-    {
-      file: pkg.browser,
-      format: 'umd',
-      name: 'elevatrix_sdk',
       footer,
     },
   ],

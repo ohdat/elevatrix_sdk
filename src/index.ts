@@ -2,31 +2,6 @@ import { ethers } from "ethers";
 import ContractABI from "./abi/contract.json";
 import { createWeb3Modal, defaultConfig } from "@web3modal/ethers";
 
-type Metadata = {
-  name: string;
-  description: string;
-  url: string;
-  icons: string[];
-};
-
-/** mainnet network config */
-const mainnet = {
-  chainId: 1,
-  name: 'Ethereum',
-  currency: 'ETH',
-  explorerUrl: 'https://etherscan.io',
-  rpcUrl: 'https://cloudflare-eth.com'
-}
-
-/** blast sepolia network config */
-const blastSepolia = {
-  chainId: 168587773,
-  name: 'Blast Sepolia',
-  currency: 'ETH',
-  explorerUrl: 'https://testnet.blastscan.io/',
-  rpcUrl: 'https://sepolia.blast.io'
-}
-
 const metadata = {
   name: 'ELEVATRIX',
   description: 'ELEVATRIX, the cutting-edge zero coding platform for NFT generation and deployment. We pave the way for creators to enter the NFT space with low costs and low threshold.',
@@ -39,9 +14,14 @@ const errorMsg = [
   'User rejected the request.',
 ]
 
-const Elevatrix = function (type = 'default', oldProvider?: any) {
+const Elevatrix = function ({ type = 'default', oldProvider, baseUrlConfig = {} }) {
   let modal: any = null
-  let provider: any = type === 'default' ? null : oldProvider
+  let provider = type === 'default' ? null : oldProvider
+  const backupUrlConfig = {
+    network: 'https://creator.catgpt.chat',
+    mint: 'https://creator.elevatrix.xyz',
+    ...baseUrlConfig
+  }
   let networks = [
     {
       chainId: 1,
@@ -60,7 +40,7 @@ const Elevatrix = function (type = 'default', oldProvider?: any) {
   ]
   
   async function getNetworks() {
-    const res = await fetch(process.env.NEXT_PUBLIC_API + '/v2/chains/networks')
+    const res = await fetch(backupUrlConfig.network + '/v2/chains/networks')
     const resJson = await res.json()
     networks = resJson.data
     return networks
@@ -119,7 +99,7 @@ const Elevatrix = function (type = 'default', oldProvider?: any) {
         provider.enable()
           .then(() => {
             resolve()
-          }).catch((error: any) => {
+          }).catch((error) => {
             reject(error)
           })
       }
@@ -136,7 +116,7 @@ const Elevatrix = function (type = 'default', oldProvider?: any) {
       throw new Error(errorMsg[0])
     }
     const chainId = provider.networkVersion
-    if (chainId != (id || blastSepolia.chainId)) {
+    if (chainId != id) {
       return false
     }
     return true
@@ -146,11 +126,14 @@ const Elevatrix = function (type = 'default', oldProvider?: any) {
    * @des add Blast Sepolia network
    * @param config [NetworkConfig] network config like chainId, name, currency, explorerUrl, rpcUrl
    */
-  const addNetwork = async (config = {}) => {
+  const addNetwork = async (config: any = {}) => {
+    if (!config || !config.chainId) {
+      throw new Error('Please set right config.')
+    }
     if (!provider) {
       throw new Error(errorMsg[0])
     }
-    const { chainId, name, currency, explorerUrl, rpcUrl } = { ...blastSepolia, ...config }
+    const { chainId, name, currency, explorerUrl, rpcUrl } = config
     const params = {
       chainId: "0x" + chainId.toString(16),
       chainName: name,
@@ -175,9 +158,12 @@ const Elevatrix = function (type = 'default', oldProvider?: any) {
    * @param config [NetworkConfig] network config like chainId, name, currency, explorerUrl, rpcUrl
    */
   const switchNetwork = async (config: any = {}) => {
-    const chainId = '0x' + (config.chainId || blastSepolia.chainId).toString(16)
+    if (!config || !config.chainId) {
+      throw new Error('Please set right config.')
+    }
+    const chainId = '0x' + (config.chainId).toString(16)
     if (type === 'default') {
-      await modal.switchNetwork(config.chainId || blastSepolia.chainId)
+      await modal.switchNetwork(config.chainId)
     } else {
       if (!provider) {
         throw new Error(errorMsg[0])
@@ -194,21 +180,11 @@ const Elevatrix = function (type = 'default', oldProvider?: any) {
     }
   }
 
-  const getMintInfo = async (params: MintParams, apiBaseUrl?: string) => {
+  const getMintInfo = async (params, apiBaseUrl) => {
     const { projectId, quantity, wallet, mintType } = params
-    const backupUrl = 'https://creator.elevatrix.xyz'
-    const url = (apiBaseUrl || backupUrl) + `/v1/mint?quantity=${quantity || ''}&project_id=${projectId || ''}&wallet=${wallet || ''}&mint_type=${mintType || ''}`
+    const url = (apiBaseUrl || backupUrlConfig.mint) + `/v1/mint?quantity=${quantity || ''}&project_id=${projectId || ''}&wallet=${wallet || ''}&mint_type=${mintType || ''}`
     const res = await fetch(url)
     return res.json()
-  }
-
-
-  type MintParams = {
-    projectId: string;
-    quantity: number;
-    wallet?: string;
-    mintType?: 1 | 2;
-    istest?: boolean;
   }
 
   /**
@@ -218,7 +194,7 @@ const Elevatrix = function (type = 'default', oldProvider?: any) {
    * @param wallet [string] wallet address
    * @param mintType [1 | 2] mint type 1: common mint 2: wallet mint[pro]
    */
-  const mint = async (params: MintParams, apiBaseUrl?: string) => {
+  const mint = async (params, apiBaseUrl) => {
     await connectWallet()
     const res = await getMintInfo({
       ...params,
@@ -236,7 +212,7 @@ const Elevatrix = function (type = 'default', oldProvider?: any) {
     const ethersProvider = new ethers.BrowserProvider(provider)
     const signer = await ethersProvider.getSigner()
     const contractAddress = res.data.contract
-    const contract = new ethers.Contract(contractAddress, ContractABI, signer)
+    const contract = new ethers.Contract(contractAddress, ContractABI.abi, signer)
     const contractParams = {
       sender: res.data.sender,
       nonce: res.data.nonce,
@@ -260,11 +236,7 @@ const Elevatrix = function (type = 'default', oldProvider?: any) {
   return {
     modal,
     provider,
-    connectWallet,
-    checkNetwork,
-    addNetwork,
-    switchNetwork,
-    getMintInfo,
+    networks,
     mint,
   }
 }

@@ -2,14 +2,13 @@
   "name": "elevatrix",
   "version": "0.0.2",
   "description": "a elevatrix sdk",
-  "main": "dist/index.cjs.js",
+  "main": "dist/index.umd.js",
   "module": "dist/index.es.js",
   "browser": "dist/index.umd.js",
   "types": "src/index.d.ts",
   "scripts": {
     "dev": "rollup -c -w",
-    "build": "rollup -c",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "rollup -c && webpack"
   },
   "author": "luoxi",
   "license": "ISC",
@@ -18,14 +17,21 @@
     "src"
   ],
   "devDependencies": {
+    "@babel/core": "^7.15.8",
+    "@babel/preset-env": "^7.15.8",
+    "@babel/preset-typescript": "^7.23.3",
     "@rollup/plugin-commonjs": "^18.0.0",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-typescript": "^8.2.1",
+    "babel-loader": "^8.2.2",
+    "json-loader": "^0.5.7",
     "rollup": "^2.45.1",
+    "rollup-plugin-livereload": "^2.0.5",
     "rollup-plugin-node-resolve": "^5.2.0",
     "tslib": "^2.6.2",
     "typescript": "^4.2.4",
-    "rollup-plugin-livereload": "^2.0.5"
+    "webpack": "^5.58.1",
+    "webpack-cli": "^4.9.0"
   },
   "dependencies": {
     "@web3modal/ethers": "^3.5.7",
