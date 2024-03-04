@@ -19,9 +19,19 @@ declare type MintParams = {
 } | {
   projectId: string;
   quantity: number;
-  wallet: string;
   mintType: 1 | 2;
+}
 
+/** every param can be empty */
+declare type InitElevatrix = {
+  type?: 'default' | 'injected';
+  provider?: any;
+  // set the backend api base url about network get and mintInfo get,
+  // if not set, will use prod info.
+  baseUrlConfig?: {
+    network?: string;
+    mint?: string;
+  }
 }
 
 declare interface Elevatrix {
@@ -36,7 +46,11 @@ declare interface Elevatrix {
 }
 
 declare namespace defaultExport {
-  const Elevatrix: new (type?: 'default' | 'custom', provider?: any) => Elevatrix;
+  const Elevatrix: new ({
+    type,
+    provider,
+    baseUrlConfig
+  }: InitElevatrix) => Elevatrix;
 }
 
 export = defaultExport
