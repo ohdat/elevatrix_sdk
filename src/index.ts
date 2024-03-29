@@ -14,7 +14,8 @@ const errorMsg = [
   'User rejected the request.',
 ]
 
-const Elevatrix = function ({ type = 'default', oldProvider, baseUrlConfig = {} }) {
+const Elevatrix = function (props: any = {}) {
+  const { type, oldProvider, baseUrlConfig } = props || {}
   let modal: any = null
   let provider = type === 'default' ? null : oldProvider
   const backupUrlConfig = {
@@ -241,4 +242,4 @@ const Elevatrix = function ({ type = 'default', oldProvider, baseUrlConfig = {} 
   }
 }
 
-export default Elevatrix
+export { Elevatrix }
