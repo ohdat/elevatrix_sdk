@@ -24,7 +24,7 @@ jobs:
       - run: npm install
       # - run: sed -i '3s/\([0-9]\{1,3\}\.[0-9]\{1,3\}\)\.[0-9]\{1,3\}/\1.${{ github.run_number }}/g' package.json
       - name: sed version
-        run: sed -i '3s/[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}/${{ env.APPVERSION }}/g' package.json
+        run: sed -i '3s/\([0-9]\{1,3\}\.[0-9]\{1,3\}\)\.[0-9]\{1,3\}/\1.${{ github.run_number }}/g' package.json
       - run: npm run build
       - run: npm publish
       - name: GH Release
