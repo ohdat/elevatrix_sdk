@@ -16,6 +16,8 @@ npm install elevatrix --save
 yarn add elevatrix
 ````
 ````javascript
+import { Elevatrix } from "elevatrix"
+
 let elevatrix = null
 const Component = () => {
   ...
