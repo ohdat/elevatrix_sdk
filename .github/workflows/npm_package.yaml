@@ -1,4 +1,4 @@
-name: verson 0.0.2
+name: build & npm bublish
 env:
   APPVERSION: 0.0.${{ github.run_number }}
 on:
