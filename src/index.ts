@@ -17,8 +17,8 @@ const errorMsg = [
 
 const Elevatrix = function (props: any = {}) {
   let { type, provider, baseUrlConfig } = props || {};
+  console.log("props", props);
   let modal: any = null;
-  // provider = type === "default" ? null : provider;
   const backupUrlConfig = {
     url: "https://creator.elevatrix.xyz",
     ...baseUrlConfig,
