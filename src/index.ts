@@ -19,8 +19,7 @@ const Elevatrix = function (props: any = {}) {
   let modal: any = null
   let provider = type === 'default' ? null : oldProvider
   const backupUrlConfig = {
-    network: 'https://creator.catgpt.chat',
-    mint: 'https://creator.elevatrix.xyz',
+    url: 'https://creator.elevatrix.xyz',
     ...baseUrlConfig
   }
   let networks = [
@@ -41,7 +40,7 @@ const Elevatrix = function (props: any = {}) {
   ]
   
   async function getNetworks() {
-    const res = await fetch(backupUrlConfig.network + '/v2/chains/networks')
+    const res = await fetch(backupUrlConfig.url + '/v2/chains/networks')
     const resJson = await res.json()
     networks = resJson.data
     return networks
@@ -183,7 +182,7 @@ const Elevatrix = function (props: any = {}) {
 
   const getMintInfo = async (params, apiBaseUrl) => {
     const { projectId, quantity, wallet, mintType } = params
-    const url = (apiBaseUrl || backupUrlConfig.mint) + `/v1/mint?quantity=${quantity || ''}&project_id=${projectId || ''}&wallet=${wallet || ''}&mint_type=${mintType || ''}`
+    const url = (apiBaseUrl || backupUrlConfig.url) + `/v1/mint?quantity=${quantity || ''}&project_id=${projectId || ''}&wallet=${wallet || ''}&mint_type=${mintType || ''}`
     const res = await fetch(url)
     return res.json()
   }
