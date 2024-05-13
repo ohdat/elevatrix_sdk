@@ -29,8 +29,7 @@ declare type InitElevatrix = {
   // set the backend api base url about network get and mintInfo get,
   // if not set, will use prod info.
   baseUrlConfig?: {
-    network?: string;
-    mint?: string;
+    url?: string;
   }
 }
 
