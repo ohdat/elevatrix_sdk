@@ -1,37 +1,39 @@
 declare type Metadata = {
-  name: string
-  description: string
-  url: string
-  icons: string[]
-}
+  name: string;
+  description: string;
+  url: string;
+  icons: string[];
+};
 
 declare type NetworkConfig = {
-  chainId: number
-  name: string
-  currency: string
-  explorerUrl: string
-  rpcUrl: string
-}
+  chainId: number;
+  name: string;
+  currency: string;
+  explorerUrl: string;
+  rpcUrl: string;
+};
 
-declare type MintParams = {
-  projectId: string;
-  quantity: number;
-} | {
-  projectId: string;
-  quantity: number;
-  mintType: 1 | 2;
-}
+declare type MintParams =
+  | {
+      projectId: string;
+      quantity: number;
+    }
+  | {
+      projectId: string;
+      quantity: number;
+      mintType: 1 | 2;
+    };
 
 /** every param can be empty */
 declare type InitElevatrix = {
-  type?: 'default' | 'injected';
+  type?: "default" | "injected";
   provider?: any;
   // set the backend api base url about network get and mintInfo get,
   // if not set, will use prod info.
   baseUrlConfig?: {
     url?: string;
-  }
-}
+  };
+};
 
 declare interface Elevatrix {
   /** web3modal inited, you can use it to get methods about web3modal */
@@ -48,8 +50,8 @@ declare namespace defaultExport {
   const Elevatrix: new ({
     type,
     provider,
-    baseUrlConfig
+    baseUrlConfig,
   }: InitElevatrix) => Elevatrix;
 }
 
-export = defaultExport
+export = defaultExport;
