@@ -1,6 +1,6 @@
 name: build & npm bublish
 env:
-  APPVERSION: 0.0.${{ github.run_number }}
+  APPVERSION: 0.2.${{ github.run_number }}
 on:
   workflow_dispatch:
   push:

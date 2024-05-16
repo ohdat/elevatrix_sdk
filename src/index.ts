@@ -15,15 +15,11 @@ const errorMsg = [
   "User rejected the request.",
 ];
 
-const Elevatrix = function (props: any = {}) {
-  let { type, provider, baseUrlConfig } = props || {};
-  console.log("props", props);
-  let modal: any = null;
-  const backupUrlConfig = {
-    url: "https://creator.elevatrix.xyz",
-    ...baseUrlConfig,
-  };
-  let networks = [
+class Elevatrix {
+  ethers = ethers;
+  endpoint = "https://creator.elevatrix.xyz";
+  provider: ethers.Eip1193Provider | undefined = undefined;
+  networks = [
     {
       chainId: 1,
       name: "Ethereum",
@@ -39,98 +35,77 @@ const Elevatrix = function (props: any = {}) {
       rpcUrl: "https://sepolia.blast.io",
     },
   ];
+  constructor({
+    endpoint,
+    provider,
+  }: {
+    endpoint: string | undefined;
+    provider: ethers.Eip1193Provider | undefined;
+  }) {
+    if (endpoint) this.endpoint = endpoint;
+    if (provider) this.provider = provider;
+  }
+  async connectWallet() {
+    if (this.provider) {
+      const singer = await new ethers.BrowserProvider(
+        this.provider
+      ).getSigner();
+      return singer.getAddress();
+    }
 
-  async function getNetworks() {
-    const res = await fetch(backupUrlConfig.url + "/v2/chains/networks");
-    const resJson = await res.json();
-    networks = resJson.data;
-    return networks;
+    const modal = createWeb3Modal({
+      ethersConfig: defaultConfig({ metadata }),
+      chains: this.networks,
+      projectId: "e84dcbc0387226f505ea48159e32c174",
+    });
+
+    return new Promise<string>((resolve, reject) => {
+      const unsubscribe = modal.subscribeEvents((event) => {
+        const data = event.data;
+        if (data.event === "MODAL_CLOSE") {
+          unsubscribe();
+          reject(new Error(errorMsg[1]));
+        }
+        if (data.event === "CONNECT_SUCCESS") {
+          this.provider = modal.getWalletProvider();
+          setTimeout(() => {
+            const address = modal.getAddress();
+            if (address) {
+              unsubscribe();
+              resolve(address);
+              return;
+            }
+            unsubscribe();
+            reject(new Error(errorMsg[1]));
+          }, 100);
+        }
+      });
+      modal.open();
+    });
   }
 
-  const initDefault = async () => {
-    await getNetworks();
-    if (type === "default") {
-      modal = createWeb3Modal({
-        ethersConfig: defaultConfig({ metadata }),
-        chains: networks,
-        projectId: "e84dcbc0387226f505ea48159e32c174",
-      });
-    }
-  };
-
-  initDefault();
-
-  /**
-   * @des if your are newer in web3, you can connect wallet here.
-   */
-  const connectWallet = () => {
-    return new Promise<void>((resolve, reject) => {
-      if (type === "default") {
-        if (!modal.getAddress()) {
-          const unsubscribe = modal.subscribeEvents((event) => {
-            const data = event.data;
-            if (data.event === "MODAL_CLOSE") {
-              unsubscribe();
-              reject(new Error(errorMsg[1]));
-            }
-            if (data.event === "CONNECT_SUCCESS") {
-              setTimeout(() => {
-                if (modal.getAddress()) {
-                  unsubscribe();
-                  resolve();
-                  return;
-                }
-                unsubscribe();
-                reject(new Error(errorMsg[1]));
-              }, 100);
-            }
-          });
-          modal.open();
-          return;
-        }
-        provider = modal.getWalletProvider();
-        resolve();
-      } else {
-        if (!provider) {
-          reject(new Error(errorMsg[0]));
-        }
-        provider
-          .getSigner()
-          .then(() => {
-            resolve();
-          })
-          .catch((error) => {
-            reject(error);
-          });
-      }
-    });
-  };
-
-  /**
-   * @des check out network is or not network you need
-   * @param id [number] chainId you want to diff
-   * @return boolean
-   */
-  const checkNetwork = (id) => {
-    if (!provider) {
+  async checkNetwork(id) {
+    if (!this.provider) {
       throw new Error(errorMsg[0]);
     }
-    const chainId = provider.networkVersion;
-    if (chainId != id) {
+    const ethersProvider = new ethers.BrowserProvider(this.provider);
+
+    const network = await ethersProvider.getNetwork();
+    if (network.chainId != id) {
       return false;
     }
     return true;
-  };
+  }
 
   /**
    * @des add Blast Sepolia network
    * @param config [NetworkConfig] network config like chainId, name, currency, explorerUrl, rpcUrl
    */
-  const addNetwork = async (config: any = {}) => {
+  async addNetwork(config: any = {}) {
     if (!config || !config.chainId) {
       throw new Error("Please set right config.");
     }
-    if (!provider) {
+    if (!this.provider) {
       throw new Error(errorMsg[0]);
     }
     const { chainId, name, currency, explorerUrl, rpcUrl } = config;
@@ -146,7 +121,7 @@ const Elevatrix = function (props: any = {}) {
       blockExplorerUrls: [explorerUrl],
     };
     try {
-      await provider.request({
+      await this.provider.request({
         method: "wallet_addEthereumChain",
         params: [params],
       });
@@ -154,48 +129,81 @@ const Elevatrix = function (props: any = {}) {
       console.error(error);
       throw error;
     }
-  };
+  }
+  async addToken(params: {
+    tokenAddress: string;
+    tokenSymbol: string;
+    tokenDecimals: number;
+    tokenImage: string;
+  }) {
+    const tokenAddress = "0xd00981105e61274c8a5cd5a88fe7e037d935b513";
+    const tokenSymbol = "TUT";
+    const tokenDecimals = 18;
+    const tokenImage = "http://placekitten.com/200/300";
+    if (!this.provider) {
+      throw new Error(errorMsg[0]);
+    }
+    try {
+      // wasAdded is a boolean. Like any RPC method, an error may be thrown.
+      const wasAdded = await this.provider.request({
+        method: "wallet_watchAsset",
+        params: {
+          type: "ERC20", // Initially only supports ERC20, but eventually more!
+          options: {
+            address: tokenAddress, // The address that the token is at.
+            symbol: tokenSymbol, // A ticker symbol or shorthand, up to 5 chars.
+            decimals: tokenDecimals, // The number of decimals in the token
+            image: tokenImage, // A string url of the token logo
+          },
+        },
+      });
 
+      if (wasAdded) {
+        console.log("Thanks for your interest!");
+      } else {
+        console.log("Your loss!");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
   /**
    * @des switch network to config network
    * @param config [NetworkConfig] network config like chainId, name, currency, explorerUrl, rpcUrl
    */
-  const switchNetwork = async (config: any = {}) => {
+  async switchNetwork(config: any = {}) {
     if (!config || !config.chainId) {
       throw new Error("Please set right config.");
     }
     const chainId = "0x" + config.chainId.toString(16);
-    if (type === "default") {
-      await modal.switchNetwork(config.chainId);
-    } else {
-      if (!provider) {
-        throw new Error(errorMsg[0]);
-      }
-      try {
-        await provider.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId }],
-        });
-      } catch (error: any) {
-        if (error?.code == 4902) {
-          await addNetwork(config);
-          return;
-        }
-        throw error;
-      }
-    }
-  };
 
-  const getMintInfo = async (params, apiBaseUrl) => {
+    if (!this.provider) {
+      throw new Error(errorMsg[0]);
+    }
+    try {
+      await this.provider.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId }],
+      });
+    } catch (error: any) {
+      if (error?.code == 4902) {
+        await this.addNetwork(config);
+        return;
+      }
+      throw error;
+    }
+  }
+
+  private async getMintInfo(params) {
     const { projectId, quantity, wallet, mintType } = params;
     const url =
-      (apiBaseUrl || backupUrlConfig.url) +
+      this.endpoint +
       `/v1/mint?quantity=${quantity || ""}&project_id=${
         projectId || ""
       }&wallet=${wallet || ""}&mint_type=${mintType || ""}`;
     const res = await fetch(url);
     return res.json();
-  };
+  }
 
   /**
    * @des nft mint function
@@ -204,30 +212,29 @@ const Elevatrix = function (props: any = {}) {
    * @param wallet [string] wallet address
    * @param mintType [1 | 2] mint type 1: common mint 2: wallet mint[pro]
    */
-  const mint = async (params, apiBaseUrl) => {
-    await connectWallet();
-    const res = await getMintInfo(
-      {
-        ...params,
-        wallet:
-          type === "default" ? modal.getAddress() : provider.selectedAddress,
-      },
-      apiBaseUrl
-    );
+  async mint(params) {
+    const walletAddress = await this.connectWallet();
+    const res = await this.getMintInfo({
+      ...params,
+      wallet: walletAddress,
+    });
     if (res.code != 200) {
       throw new Error(res.message || res.msg);
     }
-    const isRightNetwork = checkNetwork(res.data.chain_id);
+    const isRightNetwork = await this.checkNetwork(res.data.chain_id);
     if (!isRightNetwork) {
-      const rightNetworkConfig = networks.find(
+      const rightNetworkConfig = this.networks.find(
         (item) => item.chainId == res.data.chain_id
       );
-      await switchNetwork(rightNetworkConfig);
+      await this.switchNetwork(rightNetworkConfig);
     }
     const amount = ethers.parseEther(
       (Number(res.data.price) * res.data.quantity).toString()
     );
-    const ethersProvider = new ethers.BrowserProvider(provider);
+    if (!this.provider) {
+      throw new Error(errorMsg[0]);
+    }
+    const ethersProvider = new ethers.BrowserProvider(this.provider);
     const signer = await ethersProvider.getSigner();
     const contractAddress = res.data.contract;
     const contract = new ethers.Contract(
@@ -253,14 +260,7 @@ const Elevatrix = function (props: any = {}) {
       }
     );
     return mintInfo;
-  };
-
-  return {
-    modal,
-    provider,
-    networks,
-    mint,
-  };
-};
+  }
+}
 
 export { Elevatrix };
