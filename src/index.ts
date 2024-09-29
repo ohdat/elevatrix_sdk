@@ -17,7 +17,6 @@ const errorMsg = [
 
 const Elevatrix = function (props: any = {}) {
   let { type, provider, baseUrlConfig } = props || {};
-  console.log("props", props);
   let modal: any = null;
   const backupUrlConfig = {
     url: "https://creator.elevatrix.xyz",
@@ -94,7 +93,8 @@ const Elevatrix = function (props: any = {}) {
         if (!provider) {
           reject(new Error(errorMsg[0]));
         }
-        provider
+        const ethersProvider = new ethers.BrowserProvider(provider);
+        ethersProvider
           .getSigner()
           .then(() => {
             resolve();
