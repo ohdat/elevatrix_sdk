@@ -130,6 +130,14 @@ class Elevatrix {
       throw error;
     }
   }
+  /**
+   * @des add token to wallet, ex: usdt
+   * @params tokenAddress [string] token address
+   * @params tokenSymbol [string] token symbol
+   * @params tokenDecimals [number] token decimals
+   * @params tokenImage [string] token image url
+   * 
+   * */
   async addToken(params: {
     tokenAddress: string;
     tokenSymbol: string;
