@@ -44,7 +44,15 @@ class Elevatrix {
   }) {
     if (endpoint) this.endpoint = endpoint;
     if (provider) this.provider = provider;
+    this.getNetworks()
   }
+
+  async getNetworks() {
+    const res = await fetch(this.endpoint + "/v2/chains/networks")
+    const resJson = await res.json()
+    this.networks = resJson.data
+  }
+
   async connectWallet() {
     if (this.provider) {
       const singer = await new ethers.BrowserProvider(
